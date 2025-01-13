@@ -1,0 +1,180 @@
+<div class="scrollable"
+     infinite-scroll
+     [infiniteScrollDistance]="2"
+     [infiniteScrollThrottle]="50"
+     [scrollWindow]="false"
+     [immediateCheck]="true"
+     (scrolled)="onScrollDown()">
+  <table
+    mat-table
+    [dataSource]="dataSource"
+    class="mat-elevation-z8"
+    matSort>
+
+    @for (disCol of tableColumns; track disCol.columnDef) {
+      <ng-container matColumnDef="{{disCol.columnDef}}">
+        @if (disCol.isSortable) {
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>
+            <span>{{ disCol.header }}</span>
+          </th>
+        }
+        @else {
+          <th mat-header-cell *matHeaderCellDef>
+            <span>{{ disCol.header }}</span>
+          </th>
+        }
+        <td mat-cell *matCellDef="let element">
+          @if(disCol.cell(element) == 'undefined' || disCol.cell(element) == 'null') {
+            <span>&#8212;&#8212;</span>
+          } @else {
+            @if (disCol.isLink) {
+              @if (isImageArray(disCol.cell(element))) {
+                <div>
+                  @for (img of disCol.cell(element); track $index)  {
+                    <img
+                      [src]="img.src"
+                      [alt]="img.alt || 'icon'"
+                      [title]="img.title || ''"
+                      (click)="onIconClick(img?.path)"
+                      style="cursor: pointer; width: 20px; height: 20px; margin-right: 8px;"/>
+                    @if (!!img.data) {
+                      {{img.data}}
+                    }
+                  }
+                </div>
+              }
+              @else if (disCol.isDate) {
+                {{formatDateWithTimezone(disCol.cell(element))}}
+              }
+              @else {
+                @if(disCol.url) {
+                  <a [routerLink]="disCol.url(element)">
+                    {{ disCol.cell(element) }}
+                  </a>
+                }
+              }
+            }
+            @else if (disCol.isCheckbox) {
+              @if (!isValidJson(disCol.cell(element))) {
+                <input type="checkbox"
+                       (change)="onCheckboxChanged($event, element, disCol.columnDef)"/>
+                {{disCol.cell(element)}}
+              }@else {
+                @if (disCol.cell(element).checkbox) {
+                  <input type="checkbox"
+                         [checked]="isChecked(disCol.columnDef, disCol.cell(element).checked)"
+                         (change)="onCheckboxChanged($event, element, disCol.columnDef)"/>
+                }
+              }
+            }
+            @else if (disCol.isExpansion) {
+              <mat-expansion-panel>
+                <mat-expansion-panel-header>
+                  <mat-panel-title>
+                    @if (isImageArray(disCol.cell(element))) {
+                      <div>
+                        @for (img of disCol.cell(element); track $index)  {
+                          <img
+                            [src]="img.src"
+                            [alt]="img.alt || 'icon'"
+                            [title]="img.title || ''"
+                            (click)="onIconClick(img?.path)"
+                            style="cursor: pointer; width: 20px; height: 20px; margin-right: 8px;"/>
+                        }
+                      </div>
+                    } @else {
+                      {{disCol.cell(element)}}
+                    }
+                  </mat-panel-title>
+                </mat-expansion-panel-header>
+                @if (disCol.expansionColumns && disCol.expansionData) {
+                  <table mat-table
+                         [dataSource]="disCol.expansionData(element)"
+                         class="mat-elevation-z8"
+                         matSort>
+                    @for (expCol of disCol.expansionColumns; track $index) {
+                      <ng-container matColumnDef="{{expCol.columnDef}}" >
+                        <th mat-header-cell *matHeaderCellDef>
+                          <span>{{ expCol.header }}</span>
+                        </th>
+                        <td mat-cell *matCellDef="let element">
+                          @if (expCol.isLink) {
+                            @if (isImageArray(expCol.cell(element))) {
+                              <div>
+                                @for (img of expCol.cell(element); track $index)  {
+                                  <img
+                                    [src]="img.src"
+                                    [alt]="img.alt || 'icon'"
+                                    [title]="img.title || ''"
+                                    (click)="onIconClick(img?.path)"
+                                    style="cursor: pointer; width: 20px; height: 20px; margin-right: 8px;"/>
+                                  @if (!!img.data) {
+                                    {{img.data}}
+                                  }
+                                }
+                              </div>
+                            }
+                            @else {
+                              <a [routerLink]="[expCol.url]">
+                                {{ expCol.cell(element) }}
+                              </a>
+                            }
+                          }@else {
+                            {{ expCol.cell(element) }}
+                          }
+                        </td>
+                      </ng-container>
+                    }
+                    <tr
+                      mat-header-row
+                      *matHeaderRowDef="expansionColumns"
+                      class="sticky-top">
+                    </tr>
+
+                    <tr
+                      mat-row
+                      *matRowDef="let row; columns: expansionColumns;">
+                    </tr>
+                  </table>
+                }
+              </mat-expansion-panel>
+            }
+            @else {
+              @if (isImageArray(disCol.cell(element))) {
+                <div>
+                  @for (img of disCol.cell(element); track $index)  {
+                    <img
+                      [src]="img.src"
+                      [alt]="img.alt || 'icon'"
+                      [title]="img.title || ''"
+                      (click)="onIconClick(img?.path)"
+                      style="cursor: pointer; width: 20px; height: 20px; margin-right: 8px;"/>
+                    @if (!!img.data) {
+                      {{img.data}}
+                    }
+                  }
+                </div>
+              }
+              @else if (disCol.isDate) {
+                {{formatDateWithTimezone(disCol.cell(element))}}
+              }
+              @else {
+                {{ disCol.cell(element) }}
+              }
+            }
+          }
+        </td>
+      </ng-container>
+    }
+    <tr
+      mat-header-row
+      *matHeaderRowDef="displayedColumns"
+      class="sticky-top">
+    </tr>
+
+    <tr
+      mat-row
+      *matRowDef="let row; columns: displayedColumns;">
+    </tr>
+  </table>
+</div>
